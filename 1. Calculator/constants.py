@@ -1,0 +1,10 @@
+from win32api import GetSystemMetrics
+
+SCREEN_WIDTH = 500
+SCREEN_HEIGHT = 660
+
+DISPLAY_CENTER_X = int((GetSystemMetrics(0) - SCREEN_WIDTH) / 2)
+DISPLAY_CENTER_Y = int((GetSystemMetrics(1) - SCREEN_HEIGHT) / 2)
+
+BUTTON_WIDTH = SCREEN_WIDTH / 4.5
+BUTTON_HEIGHT = SCREEN_HEIGHT / 9
