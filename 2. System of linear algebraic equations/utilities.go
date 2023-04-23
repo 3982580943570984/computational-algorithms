@@ -119,23 +119,13 @@ func measureTime(f interface{}, args ...interface{}) time.Duration {
 }
 
 func subtractArrays(arr1 []float64, arr2 []float64) float64 {
-	sum1 := 0.0
-	sum2 := 0.0
+	result := 0.0
 
-	// Sum all the elements in the first array
-	for _, val := range arr1 {
-		sum1 += val
+	for i := range arr1 {
+		result += math.Abs(arr1[i] - arr2[i])
 	}
 
-	// Sum all the elements in the second array
-	for _, val := range arr2 {
-		sum2 += val
-	}
-
-	// Subtract the sum of the first array from the sum of the second array
-	result := sum2 - sum1
-
-	return math.Abs(result)
+	return result
 }
 
 func printArray(array []float64) {
@@ -188,7 +178,7 @@ func compareArrays(a, b []float64) bool {
 	}
 
 	for i := 0; i < len(a); i++ {
-		if fmt.Sprintf("%.4f", math.Abs(a[i]-b[i])) != "0.0000" {
+		if fmt.Sprintf("%.9f", math.Abs(a[i]-b[i])) != "0.000000000" {
 			return false
 		}
 	}

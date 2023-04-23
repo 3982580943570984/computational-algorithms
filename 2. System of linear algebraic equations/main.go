@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
@@ -168,14 +169,20 @@ func main() {
 				A = GenerateDiagonallyDominantMatrixWithInterval(order, left, right)
 				b = GenerateVectorWithInterval(order, left, right)
 
-				x1, _ := SolveGaussian(A, b)
-				x2, _ := SolveJacobi(A, b, 1e-6, 100000)
+				x1, err := SolveGaussian(A, b)
+				if err != nil {
+					log.Fatalf(err.Error())
+				}
+				x2, err := SolveJacobi(A, b, 1e-15, 10000000)
+				if err != nil {
+					log.Fatalf(err.Error())
+				}
 
 				data[i] = []string{
 					strconv.FormatInt(int64(order), 10),
 					measureTime(SolveGaussian, A, b).String(),
-					measureTime(SolveJacobi, A, b, 1e-6, 100000).String(),
-					strconv.FormatFloat(subtractArrays(x1, x2), 'f', 4, 64),
+					measureTime(SolveJacobi, A, b, 1e-15, 10000000).String(),
+					strconv.FormatFloat(subtractArrays(x1, x2), 'f', 15, 64),
 				}
 			}
 

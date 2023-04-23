@@ -56,6 +56,23 @@ func SolveGaussian(A [][]float64, b []float64) ([]float64, error) {
 func SolveJacobi(A [][]float64, b []float64, tol float64, maxIter int) ([]float64, error) {
 	n := len(A)
 
+	// Swap rows to remove zero values on diagonale
+	for k := 0; k < n-1; k++ {
+		// Find the pivot row
+		maxIdx := k
+		for i := k + 1; i < n; i++ {
+			if math.Abs(A[i][k]) > math.Abs(A[maxIdx][k]) {
+				maxIdx = i
+			}
+		}
+
+		// Swap the pivot row with the current row
+		if maxIdx != k {
+			A[k], A[maxIdx] = A[maxIdx], A[k]
+			b[k], b[maxIdx] = b[maxIdx], b[k]
+		}
+	}
+
 	// Check that A is diagonally dominant
 	for i := 0; i < n; i++ {
 		sum := 0.0
