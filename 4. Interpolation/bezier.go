@@ -22,7 +22,8 @@ func (bezier *Bezier) FindSegment(value float64) (int, error) {
 			return i, nil
 		}
 	}
-	return -1, fmt.Errorf("Заданное значение находится вне одного сегмента сплайна")
+	fmt.Println(bezier.Nodes)
+	return -1, fmt.Errorf("Заданное значение: %v находится вне одного сегмента сплайна", value)
 }
 
 // Определяет первую производную сплайна в узлах интерполяции

@@ -30,7 +30,7 @@ func OutputGraphInConsole(data [][]float64) {
 func OutputGraphInPNG(data [][]Point) {
 	// Create a new plot and set its title
 	p := plot.New()
-	p.Title.Text = "Three Graphs on One Plot"
+	p.Title.Text = "Graph Comparison"
 
 	pts1 := make(plotter.XYs, len(data[0]))
 	for i := range pts1 {
@@ -51,7 +51,7 @@ func OutputGraphInPNG(data [][]Point) {
 	}
 
 	// Add the three data sets to the plot
-	err := plotutil.AddLinePoints(p,
+	err := plotutil.AddLines(p,
 		"Default", pts1,
 		"Lagrange", pts2,
 		"Bezier", pts3)
@@ -66,20 +66,18 @@ func OutputGraphInPNG(data [][]Point) {
 	// Save the plot to a PNG file
 	err = p.Save(12*vg.Inch, 12*vg.Inch, "plot.png")
 	if err != nil {
-		panic(err)
+		log.Fatalf(err.Error())
 	}
 }
 
 func main() {
 	NumberOfPoints := 10
 	// Задаем точки, через которые должен проходить многочлен
-	X, Y := EquidistantNodes(3, 6, NumberOfPoints)
+	X, Y := EquidistantNodes(3.0, 6.0, NumberOfPoints)
 	Points := []Point{}
-	for i := 0; i < NumberOfPoints; i++ {
+	for i := 0; i <= NumberOfPoints; i++ {
 		Points = append(Points, Point{X[i], Y[i]})
 	}
-
-	fmt.Println(X)
 
 	var x float64
 	fmt.Print("Введите значение x: ")
@@ -97,22 +95,19 @@ func main() {
 	fmt.Printf("Интерполяционный кубический сплайн: %v\n", bezier.Interpolate(x))
 
 	GraphNumbers := 3
-	data := make([][]Point, GraphNumbers)
-
-	for i := 0; i < len(data); i++ {
-		for _, x := range X {
+	GraphPoints := make([][]Point, GraphNumbers)
+	for i := 0; i < len(GraphPoints); i++ {
+		for j := 3.0; j <= 6.0; j += 0.001 {
 			if i == 0 {
-				data[i] = append(data[i], Point{x, f(x)})
+				GraphPoints[i] = append(GraphPoints[i], Point{j, f(j)})
 			} else if i == 1 {
-				data[i] = append(data[i], Point{x, lagrange.Interpolate(x)})
+				GraphPoints[i] = append(GraphPoints[i], Point{j, lagrange.Interpolate(j)})
 			} else {
-				if x >= 6 {
-					x -= 0.4
-				}
-				data[i] = append(data[i], Point{x, bezier.Interpolate(x)})
+				GraphPoints[i] = append(GraphPoints[i], Point{j, bezier.Interpolate(j)})
 			}
 		}
 	}
 
-	OutputGraphInPNG(data)
+	OutputGraphInPNG(GraphPoints)
+
 }
