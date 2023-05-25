@@ -6,7 +6,7 @@ using namespace std;
 const double a = 0.0;
 const double b = 1.0;
 const int n = 10;
-const double e = 1e-8;
+const double e = 1e-9;
 
 double f(double x) { return exp(-x) * cos(pow(x, 2)); }
 
@@ -77,6 +77,7 @@ double IntegrateSimpson(double a, double b, int n) {
 }
 
 // https://ru.wikipedia.org/wiki/Правило_Рунге
+// https://encyclopediaofmath.org/wiki/Runge_rule
 double RungeRule(double I1, double I2, double O) { return abs(I2 - I1) / O; }
 
 int main() {
