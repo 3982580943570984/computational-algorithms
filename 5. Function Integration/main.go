@@ -8,7 +8,8 @@ import (
 const (
 	a = 0
 	b = 1
-	n = 10000
+	n = 10
+	e = 1e-8
 )
 
 func f(x float64) float64 {
@@ -81,6 +82,10 @@ func IntegrateSimpson(a, b float64, n int) float64 {
 	return integral
 }
 
+func RungeRule(I1, I2, O float64) float64 {
+	return math.Abs(I2-I1) * (1 / O)
+}
+
 /**
 
 Апроксимация - приближение
@@ -88,9 +93,43 @@ func IntegrateSimpson(a, b float64, n int) float64 {
 **/
 
 func main() {
-	fmt.Printf("Значение интеграла:%.30f\n", IntegrateLeftRectangles(a, b, n))
-	fmt.Printf("Значение интеграла:%.30f\n", IntegrateRightRectangles(a, b, n))
-	fmt.Printf("Значение интеграла:%.30f\n", IntegrateMidRectangles(a, b, n))
-	fmt.Printf("Значение интеграла:%.30f\n", IntegrateTrapezoid(a, b, n))
-	fmt.Printf("Значение интеграла:%.30f\n", IntegrateSimpson(a, b, n))
+	multiplier := 2
+	I1, I2 := IntegrateLeftRectangles(a, b, n), IntegrateLeftRectangles(a, b, multiplier*n)
+	for RungeRule(I1, I2, 1) > e {
+		multiplier *= 2
+		I1, I2 = I2, IntegrateLeftRectangles(a, b, multiplier*n)
+	}
+	fmt.Printf("Значение интеграла:%.30f\n", I2)
+
+	multiplier = 2
+	I1, I2 = IntegrateRightRectangles(a, b, n), IntegrateRightRectangles(a, b, multiplier*n)
+	for RungeRule(I1, I2, 1) > e {
+		multiplier *= 2
+		I1, I2 = I2, IntegrateRightRectangles(a, b, multiplier*n)
+	}
+	fmt.Printf("Значение интеграла:%.30f\n", I2)
+
+	multiplier = 2
+	I1, I2 = IntegrateMidRectangles(a, b, n), IntegrateMidRectangles(a, b, multiplier*n)
+	for RungeRule(I1, I2, 3) > e {
+		multiplier *= 2
+		I1, I2 = I2, IntegrateMidRectangles(a, b, multiplier*n)
+	}
+	fmt.Printf("Значение интеграла:%.30f\n", I2)
+
+	multiplier = 2
+	I1, I2 = IntegrateTrapezoid(a, b, n), IntegrateTrapezoid(a, b, multiplier*n)
+	for RungeRule(I1, I2, 3) > e {
+		multiplier *= 2
+		I1, I2 = I2, IntegrateTrapezoid(a, b, multiplier*n)
+	}
+	fmt.Printf("Значение интеграла:%.30f\n", I2)
+
+	multiplier = 2
+	I1, I2 = IntegrateSimpson(a, b, n), IntegrateSimpson(a, b, multiplier*n)
+	for RungeRule(I1, I2, 15) > e {
+		multiplier *= 2
+		I1, I2 = I2, IntegrateSimpson(a, b, multiplier*n)
+	}
+	fmt.Printf("Значение интеграла:%.30f\n", I2)
 }
