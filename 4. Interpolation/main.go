@@ -91,8 +91,11 @@ func main() {
 	fmt.Printf("Интерполяционный многочлен: %v\n", lagrange.Interpolate(x))
 
 	// Решение кубическими сплайнами
-	bezier := NewBezier(Points)
-	fmt.Printf("Интерполяционный кубический сплайн: %v\n", bezier.Interpolate(x))
+	// bezier := NewBezier(Points)
+	// fmt.Printf("Интерполяционный кубический сплайн: %v\n", bezier.Interpolate(x))
+
+	spline := NewSpline(Points)
+	fmt.Printf("Интерполяционный кубический сплайн: %v\n", spline.Evaluate(x))
 
 	GraphNumbers := 3
 	GraphPoints := make([][]Point, GraphNumbers)
@@ -103,7 +106,7 @@ func main() {
 			} else if i == 1 {
 				GraphPoints[i] = append(GraphPoints[i], Point{j, lagrange.Interpolate(j)})
 			} else {
-				GraphPoints[i] = append(GraphPoints[i], Point{j, bezier.Interpolate(j)})
+				GraphPoints[i] = append(GraphPoints[i], Point{j, spline.Evaluate(j)})
 			}
 		}
 	}

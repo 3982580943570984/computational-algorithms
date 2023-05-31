@@ -2,6 +2,10 @@ package main
 
 import "fmt"
 
+/*
+https://en.wikipedia.org/wiki/Lagrange_polynomial
+*/
+
 type Lagrange struct {
 	Nodes []Point
 }
