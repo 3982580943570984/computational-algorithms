@@ -1,6 +1,8 @@
 package main
 
-import "log"
+import (
+	"log"
+)
 
 // Коэффициенты кубического полинома
 type Coefficient struct {
@@ -23,71 +25,93 @@ func NewSpline(points []Point) *Spline {
 
 // computeCoefficients вычисляет коэффициенты кубических полиномов сплайна
 func (s *Spline) computeCoefficients() {
+	// Количество промежутков
 	n := len(s.Points) - 1
+
+	// Для каждого промежутка создаем полином
 	s.Polynomials = make([]Coefficient, n)
 
-	// Создание и заполнение матрицы коэффициентов системы линейных уравнений
+	// Создаем трехдиагональную матрицу
 	matrix := make([][]float64, len(s.Points))
 	for i := range matrix {
 		matrix[i] = make([]float64, n+2)
 	}
-	for i := 1; i < n; i++ {
-		// выражает часть системы, отвечающую за первую производную на границах интервалов, а именно
-		// - разность значений аргумента между соседними точками данных
-		matrix[i][i-1] = s.Points[i].X - s.Points[i-1].X
-		// отражает влияние текущего интервала на кубический полином, а также на его первую производную в пределах интервала
-		matrix[i][i] = 2.0 * (s.Points[i+1].X - s.Points[i-1].X)
-		// также выражает разность значений аргумента между соседними точками данных, но уже на следующем интервале
-		matrix[i][i+1] = s.Points[i+1].X - s.Points[i].X
-		// определяет влияние значений функции на границах интервала, а также изменения скорости изменения значения функции на границах интервала
-		// выражение соответствует условию непрерывности первой производной на границе интервалов и условию непрерывности
-		// второй производной на границах интервалов, устанавливающих значение второй производной равным нулю на границах интервалов
-		matrix[i][n+1] = 6.0 * ((s.Points[i+1].Y-s.Points[i].Y)/(s.Points[i+1].X-s.Points[i].X) - (s.Points[i].Y-s.Points[i-1].Y)/(s.Points[i].X-s.Points[i-1].X))
-	}
-	matrix[0][0] = 1
-	matrix[n][n] = 1
 
-	// Решение системы линейных уравнений для нахождения вторых производных
-	secondDerivatives := solveTridiagonalSystem(matrix)
+	for i := 1; i < n; i++ {
+		h_i0 := s.Points[i].X - s.Points[i-1].X
+		h_i1 := s.Points[i+1].X - s.Points[i].X
+
+		f_i0 := s.Points[i-1].Y
+		f_i1 := s.Points[i].Y
+		f_i2 := s.Points[i+1].Y
+
+		// A_i = h_{i}
+		matrix[i][i-1] = h_i0
+		// C_i = 2*(h_{i} + h_{i+1})
+		matrix[i][i] = 2 * (h_i0 + h_i1)
+		// B_i = h_{i+1}
+		matrix[i][i+1] = h_i1
+
+		// F_i
+		matrix[i][n+1] = 6 * ((f_i2-f_i1)/(h_i1) - (f_i1-f_i0)/(h_i0))
+	}
+
+	// C_0, B_0
+	h_i0 := s.Points[1].X - s.Points[0].X
+	h_i1 := s.Points[2].X - s.Points[1].X
+	matrix[0][0] = 2 * (h_i1 + h_i0)
+	matrix[0][1] = s.Points[1].X - s.Points[0].X
+
+	// A_n, C_n
+	h_i0 = s.Points[len(s.Points)-2].X - s.Points[len(s.Points)-3].X
+	h_i1 = s.Points[len(s.Points)-1].X - s.Points[len(s.Points)-2].X
+	matrix[n][n-1] = s.Points[len(s.Points)-1].X - s.Points[len(s.Points)-2].X
+	matrix[n][n] = 2 * (h_i1 + h_i0)
+
+	// Решение системы линейных уравнений
+	c := solveTridiagonalMatrix(matrix)
 
 	// Вычисление коэффициентов кубических полиномов сплайна
-	// https://mathworld.wolfram.com/CubicSpline.html
 	for i := 0; i < n; i++ {
-		h := s.Points[i+1].X - s.Points[i].X
+		h_i := s.Points[i+1].X - s.Points[i].X
+
+		f_i0 := s.Points[i].Y
+		f_i1 := s.Points[i+1].Y
+
 		s.Polynomials[i] = Coefficient{
-			s.Points[i].Y,
-			(s.Points[i+1].Y-s.Points[i].Y)/h - h/6*(2*secondDerivatives[i]+secondDerivatives[i+1]),
-			secondDerivatives[i] / 2,
-			(secondDerivatives[i+1] - secondDerivatives[i]) / (6 * h),
+			// a
+			f_i0,
+			// b
+			(f_i1-f_i0)/h_i - (c[i+1]+2*c[i])*(h_i/6),
+			// c
+			c[i],
+			// d
+			(c[i+1] - c[i]) / h_i,
 		}
 	}
 }
 
-/**
+/*
 solveTridiagonalSystem решает систему линейных уравнений с трехдиагональной матрицей
 https://en.wikipedia.org/wiki/Tridiagonal_matrix_algorithm
 */
-func solveTridiagonalSystem(matrix [][]float64) []float64 {
-	// Получаем размер матрицы
-	n := len(matrix) - 1
+func solveTridiagonalMatrix(matrix [][]float64) []float64 {
+	n := len(matrix)
 
-	// Прямой ход прогонки
-	for i := 1; i <= n; i++ {
-		// Вычисляем коэффициент m для текущей строки
+	// Прямой ход
+	for i := 1; i < n; i++ {
 		m := matrix[i][i-1] / matrix[i-1][i-1]
-		// Изменяем элементы матрицы в соответствии с прогонкой
 		matrix[i][i] -= m * matrix[i-1][i]
-		matrix[i][n+1] -= m * matrix[i-1][n+1]
+		matrix[i][n] -= m * matrix[i-1][n-1]
 	}
 
-	// Обратный ход прогонки
-	x := make([]float64, n+1)
-	x[n] = matrix[n][n+1] / matrix[n][n]
-	for i := n - 1; i >= 0; i-- {
-		x[i] = (matrix[i][n+1] - matrix[i][i+1]*x[i+1]) / matrix[i][i]
+	// Обратный ход
+	x := make([]float64, n)
+	x[n-1] = matrix[n-1][n] / matrix[n-1][n-1]
+	for i := n - 2; i >= 0; i-- {
+		x[i] = (matrix[i][n] - matrix[i][i+1]*x[i+1]) / matrix[i][i]
 	}
 
-	// Возвращаем решение системы
 	return x
 }
 
@@ -101,12 +125,14 @@ func (s *Spline) Evaluate(x float64) float64 {
 	for i := 0; i < len(s.Points)-1; i++ {
 		if x >= s.Points[i].X && x <= s.Points[i+1].X {
 			// Вычисление значения кубического полинома в точке x
-			dx := x - s.Points[i].X
+			h := x - s.Points[i].X
+
 			a := s.Polynomials[i].a
 			b := s.Polynomials[i].b
 			c := s.Polynomials[i].c
 			d := s.Polynomials[i].d
-			return a + dx*(b+dx*(c+dx*d))
+
+			return a + h*(b+h*(c/2+h*d/6))
 		}
 	}
 

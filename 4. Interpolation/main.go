@@ -90,10 +90,6 @@ func main() {
 	}
 	fmt.Printf("Интерполяционный многочлен: %v\n", lagrange.Interpolate(x))
 
-	// Решение кубическими сплайнами
-	// bezier := NewBezier(Points)
-	// fmt.Printf("Интерполяционный кубический сплайн: %v\n", bezier.Interpolate(x))
-
 	spline := NewSpline(Points)
 	fmt.Printf("Интерполяционный кубический сплайн: %v\n", spline.Evaluate(x))
 
